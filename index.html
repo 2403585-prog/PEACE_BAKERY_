@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Peace Bakery</title>
+  <link rel="stylesheet" href="PBH.css">
+</head>
+
+<body>
+
+  <!-- HEADER -->
+  <header class="site-header">
+    <h1>Welcome to Peace Bakery</h1>
+    <nav>
+      <button id="btn-home">Home</button>
+      <button id="btn-products">Products</button>
+      <button id="btn-about">About</button>
+      <button id="btn-contact">Contact</button>
+      <button id="btn-admin">Admin</button>
+      <button id="open-cart">Cart (<span id="cart-count">0</span>)</button>
+    </nav>
+  </header>
+
+  <!-- HERO -->
+  <section id="hero" class="hero">
+    <h2>Fresh baked goods — shared with community</h2>
+    <p>We track expiry dates, donate near-expiry items, and keep transparent records.</p>
+    <button id="shop-now">Shop Now</button>
+  </section>
+
+  <!-- PRODUCTS -->
+  <main>
+    <section id="products-section">
+      <h3>Products</h3>
+      <div id="products-grid" class="grid"></div>
+    </section>
+
+    <!-- ABOUT -->
+    <section id="about-section" class="hidden">
+      <h3>About Peace Bakery</h3>
+      <p>Peace Bakery reduces food waste by donating near-expiry items.</p>
+    </section>
+
+    <!-- CONTACT -->
+    <section id="contact-section" class="hidden">
+      <h3>Contact Us</h3>
+      <p>Email: info@peacebakery.example</p>
+    </section>
+  </main>
+
+  <!-- CART PANEL -->
+  <aside id="cart-panel" class="cart-panel hidden">
+    <h3>Your Cart</h3>
+    <div id="cart-items"></div>
+    <p>Total: KSh <span id="cart-total">0</span></p>
+    <button id="checkout-btn">Checkout</button>
+    <button id="clear-cart">Clear Cart</button>
+    <button id="close-cart">Close</button>
+  </aside>
+
+  <!-- ADMIN MODAL -->
+  <div id="admin-modal" class="modal hidden">
+    <div class="modal-content">
+      <button id="admin-close" class="modal-close">×</button>
+      <h3>Admin Panel</h3>
+
+      <!-- LOGIN -->
+      <div id="admin-login-box">
+        <p>Enter admin password:</p>
+        <input id="admin-pw" type="password" placeholder="Password">
+        <button id="admin-login">Login</button>
+      </div>
+
+      <!-- ADMIN PANEL -->
+      <div id="admin-panel-box" class="hidden admin-container">
+
+        <!-- LEFT MENU -->
+        <div class="admin-menu">
+          <button class="admin-tab" data-section="add-product">Add Product</button>
+          <button class="admin-tab" data-section="donations">Donations & Waste</button>
+          <button class="admin-tab" data-section="manage-products">Manage Products</button>
+          <button id="admin-logout" class="danger">Logout</button>
+        </div>
+
+        <!-- RIGHT CONTENT -->
+        <div class="admin-content horizontal-admin">
+
+          <!-- ADD PRODUCT -->
+          <section id="add-product" class="admin-section hidden">
+            <h4>Add Product</h4>
+            <div class="form-row">
+              <input id="p-name" placeholder="Name">
+              <input id="p-category" placeholder="Category">
+            </div>
+            <div class="form-row">
+              <input id="p-price" type="number" placeholder="Price (KSh)">
+              <input id="p-qty" type="number" placeholder="Quantity">
+            </div>
+            <div class="form-row">
+              <input id="p-expiry" placeholder="Expiry date (YYYY-MM-DD)">
+              <input id="p-image" placeholder="Image URL (optional)">
+            </div>
+            <textarea id="p-desc" placeholder="Short description"></textarea>
+            <button id="add-product-btn" class="primary">Add Product</button>
+          </section>
+
+          <!-- DONATIONS -->
+          <section id="donations" class="admin-section hidden">
+            <h4>Donations & Waste</h4>
+            <div class="form-row">
+              <select id="don-prod"></select>
+              <input id="don-qty" type="number" placeholder="Quantity">
+            </div>
+            <div class="form-row">
+              <input id="don-recipient" placeholder="Recipient">
+              <input id="waste-reason" placeholder="Reason (waste)">
+            </div>
+            <button id="record-donation" class="primary">Record Donation</button>
+            <button id="record-waste" class="danger">Record Waste</button>
+          </section>
+
+          <!-- MANAGE PRODUCTS -->
+          <section id="manage-products" class="admin-section hidden">
+            <h4>Manage Products</h4>
+            <div id="admin-products-list"></div>
+          </section>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHECKOUT MODAL -->
+  <div id="checkout-modal" class="modal hidden">
+    <div class="modal-content">
+      <button id="checkout-close" class="modal-close">×</button>
+      <h3>Checkout</h3>
+      <input id="c-name" placeholder="Full Name">
+      <input id="c-phone" placeholder="Phone">
+      <textarea id="c-address" placeholder="Address"></textarea>
+      <button id="place-order">Place Order</button>
+    </div>
+  </div>
+
+  <!-- JAVASCRIPT LINK -->
+  <script src="PBH.js"></script>
+
+</body>
+</html>
