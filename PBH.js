@@ -1,4 +1,4 @@
-// PBH.js (upgraded with LocalStorage persistence)
+// PBH.js (final upgraded with LocalStorage persistence)
 
 document.addEventListener("DOMContentLoaded", () => {
   // --- GLOBAL STATE ---
@@ -236,8 +236,11 @@ document.addEventListener("DOMContentLoaded", () => {
     alert(`Waste recorded: ${qty} x ${prod.name}. Reason: ${reason}.`);
   });
 
-  // --- INITIALIZE ---
-  loadState();
-  renderProducts();
-  updateCartUI();
-});
+  // --- CHECKOUT ---
+  $("place-order")?.addEventListener("click", () => {
+    const name = $("c-name")?.value?.trim();
+    const phone = $("c-phone")?.value?.trim();
+    const address = $("c-address")?.value?.trim();
+
+    if (!name || !phone || !address) {
+      alert
