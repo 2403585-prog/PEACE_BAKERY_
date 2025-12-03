@@ -33,34 +33,13 @@ document.addEventListener("DOMContentLoaded", () => {
       // Default sample products if none saved yet
       products = [
         {
-          id: 1,
-          name: "Vanilla Cupcake",
-          category: "Pastry",
-          price: 130,
-          qty: 50,
-          expiry: "2025-12-31",
-          image: "https://images.unsplash.com/photo-1464347744102-1b0d5c0c3a83?q=80&w=600&auto=format&fit=crop",
-          desc: "It's topped with buttercream frosting"
+        
         },
         {
-          id: 2,
-          name: "Banana Bread",
-          category: "Bread",
-          price: 100,
-          qty: 20,
-          expiry: "2025-11-30",
-          image: "https://images.unsplash.com/photo-1549575815-3e73b8ff9252?q=80&w=600&auto=format&fit=crop",
-          desc: "Moist and flavorful"
+          
         },
         {
-          id: 3,
-          name: "Carrot Cake",
-          category: "Cake",
-          price: 200,
-          qty: 12,
-          expiry: "2025-12-15",
-          image: "https://images.unsplash.com/photo-1551024601-bec3ebc12e5e?q=80&w=600&auto=format&fit=crop",
-          desc: "Classic with cream cheese icing"
+       
         }
       ];
     }
@@ -244,3 +223,4 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (!name || !phone || !address) {
       alert
+
