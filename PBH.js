@@ -1,55 +1,64 @@
-// PBH.js (final upgraded with LocalStorage persistence)
+// PBH.js — upgraded with full LocalStorage persistence
 
 document.addEventListener("DOMContentLoaded", () => {
   // --- GLOBAL STATE ---
   let isAdmin = false;
   let cart = [];
+  let products = [];
   let donationHistory = [];
   let wasteHistory = [];
-  let products = [];
 
-  // --- ELEMENT HELPERS ---
+  // --- HELPERS ---
   const $ = (id) => document.getElementById(id);
   const hide = (el) => el && el.classList.add("hidden");
   const show = (el) => el && el.classList.remove("hidden");
 
-  // --- LOCALSTORAGE HELPERS ---
+  // -------------------------------
+  //   LOCAL STORAGE SAVE & LOAD
+  // -------------------------------
   function saveState() {
     localStorage.setItem("products", JSON.stringify(products));
     localStorage.setItem("cart", JSON.stringify(cart));
-    localStorage.setItem("donationHistory", JSON.stringify(donationHistory));
-    localStorage.setItem("wasteHistory", JSON.stringify(wasteHistory));
+    localStorage.setItem("donations", JSON.stringify(donationHistory));
+    localStorage.setItem("waste", JSON.stringify(wasteHistory));
   }
 
   function loadState() {
-    const prodData = localStorage.getItem("products");
-    const cartData = localStorage.getItem("cart");
-    const donData = localStorage.getItem("donationHistory");
-    const wasteData = localStorage.getItem("wasteHistory");
+    products = JSON.parse(localStorage.getItem("products")) || [];
+    cart = JSON.parse(localStorage.getItem("cart")) || [];
+    donationHistory = JSON.parse(localStorage.getItem("donations")) || [];
+    wasteHistory = JSON.parse(localStorage.getItem("waste")) || [];
 
-    if (prodData) {
-      products = JSON.parse(prodData);
-    } else {
-      // Default sample products if none saved yet
+    // If FIRST TIME → Load sample products
+    if (products.length === 0) {
       products = [
         {
-        
+          id: 1,
+          name: "Vanilla Cupcake",
+          category: "Pastry",
+          price: 130,
+          qty: 50,
+          expiry: "2025-12-31",
+          image: "https://images.unsplash.com/photo-1464347744102-1b0d5c0c3a83?w=600",
+          desc: "Topped with buttercream."
         },
         {
-          
-        },
-        {
-       
+          id: 2,
+          name: "Banana Bread",
+          category: "Bread",
+          price: 100,
+          qty: 20,
+          expiry: "2025-11-30",
+          image: "https://images.unsplash.com/photo-1549575815-3e73b8ff9252?w=600",
+          desc: "Moist and delicious."
         }
       ];
     }
-
-    if (cartData) cart = JSON.parse(cartData);
-    if (donData) donationHistory = JSON.parse(donData);
-    if (wasteData) wasteHistory = JSON.parse(wasteData);
   }
 
-  // --- RENDER PRODUCTS ---
+  // -------------------------------
+  //   RENDER PRODUCTS TO GRID
+  // -------------------------------
   function renderProducts() {
     const grid = $("products-grid");
     if (!grid) return;
@@ -59,20 +68,25 @@ document.addEventListener("DOMContentLoaded", () => {
       const card = document.createElement("div");
       card.className = "card";
       card.innerHTML = `
-        <img src="${p.image || 'images/default.jpg'}" alt="${p.name}">
+        <img src="${p.image || "images/default.jpg"}" alt="${p.name}">
         <h4>${p.name}</h4>
-        <p class="small">${p.desc || ""}</p>
+        <p class="small">${p.desc}</p>
         <p><strong>KSh ${p.price}</strong></p>
-        <p class="small">In stock: ${p.qty}${p.expiry ? ` • Exp: ${p.expiry}` : ""}</p>
-        <button class="add-to-cart"${p.qty <= 0 ? " disabled" : ""}>${p.qty > 0 ? "Add to Cart" : "Out of stock"}</button>
+        <p class="small">Stock: ${p.qty} • ${p.expiry ? "Exp: " + p.expiry : ""}</p>
+        <button class="add-to-cart"${p.qty <= 0 ? " disabled" : ""}>
+          ${p.qty > 0 ? "Add to Cart" : "Out of Stock"}
+        </button>
       `;
-      const btn = card.querySelector(".add-to-cart");
-      btn?.addEventListener("click", () => addToCart({
-        id: p.id,
-        name: p.name,
-        price: p.price,
-        image: p.image || "images/default.jpg"
-      }));
+
+      card.querySelector(".add-to-cart").addEventListener("click", () => {
+        addToCart({
+          id: p.id,
+          name: p.name,
+          price: p.price,
+          image: p.image
+        });
+      });
+
       grid.appendChild(card);
     });
 
@@ -81,22 +95,24 @@ document.addEventListener("DOMContentLoaded", () => {
     saveState();
   }
 
-  // --- CART LOGIC ---
+  // -------------------------------
+  //            CART
+  // -------------------------------
   function updateCartUI() {
-    const cartItems = $("cart-items");
-    const cartTotal = $("cart-total");
-    const cartCount = $("cart-count");
+    const list = $("cart-items");
+    const totalEl = $("cart-total");
+    const countEl = $("cart-count");
 
-    if (!cartItems || !cartTotal || !cartCount) return;
+    if (!list) return;
 
-    cartItems.innerHTML = "";
+    list.innerHTML = "";
     let total = 0;
 
     cart.forEach(item => {
-      total += item.price * item.quantity;
-      cartItems.innerHTML += `
+      total += item.quantity * item.price;
+      list.innerHTML += `
         <div class="cart-item">
-          <img src="${item.image || 'images/default.jpg'}" alt="${item.name}">
+          <img src="${item.image}">
           <div>
             <p>${item.name}</p>
             <p>KSh ${item.price} x ${item.quantity}</p>
@@ -105,52 +121,51 @@ document.addEventListener("DOMContentLoaded", () => {
       `;
     });
 
-    cartTotal.textContent = total;
-    cartCount.textContent = cart.reduce((sum, i) => sum + i.quantity, 0);
+    countEl.textContent = cart.reduce((s, i) => s + i.quantity, 0);
+    totalEl.textContent = total;
     saveState();
   }
 
   function addToCart(product) {
-    const prod = products.find(p => p.id === product.id);
-    if (!prod || prod.qty <= 0) {
-      alert("Sorry, this product is out of stock.");
-      return;
-    }
+    const prodStock = products.find(p => p.id === product.id);
+    const inCart = cart.find(i => i.id === product.id);
 
-    const existing = cart.find(p => p.id === product.id);
-    const currentQtyInCart = existing ? existing.quantity : 0;
+    if (prodStock.qty === 0) return alert("Out of stock.");
+    if (inCart && inCart.quantity >= prodStock.qty)
+      return alert("No more stock available.");
 
-    if (currentQtyInCart >= prod.qty) {
-      alert("No more stock available.");
-      return;
-    }
-
-    if (existing) {
-      existing.quantity += 1;
-    } else {
-      cart.push({ ...product, quantity: 1 });
-    }
+    if (inCart) inCart.quantity++;
+    else cart.push({ ...product, quantity: 1 });
 
     updateCartUI();
   }
 
-  // --- ADMIN ADD PRODUCT ---
+  // -------------------------------
+  //      ADMIN: ADD PRODUCT
+  // -------------------------------
   $("add-product-btn")?.addEventListener("click", () => {
-    if (!isAdmin) {
-      alert("Only admin can add products.");
-      return;
+    if (!isAdmin) return alert("Admin only.");
+
+    const name = $("p-name").value.trim();
+    const category = $("p-category").value.trim();
+    const price = Number($("p-price").value);
+    const qty = Number($("p-qty").value);
+    const expiry = $("p-expiry").value.trim();
+    const desc = $("p-desc").value.trim();
+
+    // SUPPORTS IMAGE UPLOAD OR URL
+    const imgInput = $("p-image");
+    let imageURL = "";
+
+    if (imgInput.files && imgInput.files.length > 0) {
+      const file = imgInput.files[0];
+      imageURL = URL.createObjectURL(file); // preview + save
+    } else {
+      imageURL = imgInput.value; // URL typed manually
     }
 
-    const name = $("p-name")?.value?.trim();
-    const category = $("p-category")?.value?.trim();
-    const price = Number($("p-price")?.value);
-    const qty = Number($("p-qty")?.value);
-    const expiry = $("p-expiry")?.value?.trim();
-    const image = $("p-image")?.value?.trim();
-    const desc = $("p-desc")?.value?.trim();
-
-    if (!name || !price || !qty || price < 0 || qty < 0) {
-      alert("Name, positive price, and non-negative quantity are required.");
+    if (!name || !price || qty < 0) {
+      alert("Enter valid product details.");
       return;
     }
 
@@ -161,66 +176,130 @@ document.addEventListener("DOMContentLoaded", () => {
       price,
       qty,
       expiry,
-      image: image || "images/default.jpg",
-      desc
+      desc,
+      image: imageURL || "images/default.jpg"
     };
 
     products.push(newProduct);
     renderProducts();
-    refreshDonationSelect();
-    renderAdminProductsList();
     saveState();
 
-    ["p-name","p-category","p-price","p-qty","p-expiry","p-image","p-desc"].forEach(id => { if ($(id)) $(id).value = ""; });
+    ["p-name","p-category","p-price","p-qty","p-expiry","p-desc","p-image"]
+      .forEach(id => $(id).value = "");
 
-    alert("Product added successfully!");
+    alert("Product saved permanently!");
   });
 
-  // --- DONATIONS & WASTE ---
+  // -------------------------------
+  //      ADMIN: MANAGE PRODUCTS
+  // -------------------------------
+  function renderAdminProductsList() {
+    const container = $("admin-products-list");
+    if (!container) return;
+
+    container.innerHTML = "";
+
+    products.forEach(p => {
+      const row = document.createElement("div");
+      row.className = "admin-row";
+      row.innerHTML = `
+        <strong>${p.name}</strong> — ${p.qty} pcs — KSh ${p.price}
+        <button class="edit">Edit</button>
+        <button class="danger delete">Delete</button>
+      `;
+
+      // EDIT QTY
+      row.querySelector(".edit").addEventListener("click", () => {
+        const newQty = Number(prompt("New quantity:", p.qty));
+        if (isNaN(newQty) || newQty < 0) return;
+        p.qty = newQty;
+        renderProducts();
+        saveState();
+      });
+
+      // DELETE PRODUCT
+      row.querySelector(".delete").addEventListener("click", () => {
+        if (!confirm("Delete product?")) return;
+        products = products.filter(x => x.id !== p.id);
+        renderProducts();
+        saveState();
+      });
+
+      container.appendChild(row);
+    });
+  }
+
+  // -------------------------------
+  //      DONATIONS & WASTE
+  // -------------------------------
+  function refreshDonationSelect() {
+    const select = $("don-prod");
+    if (!select) return;
+
+    select.innerHTML = "";
+    products.forEach(p => {
+      select.innerHTML += `<option value="${p.id}">${p.name} (${p.qty})</option>`;
+    });
+  }
+
+  // Donation
   $("record-donation")?.addEventListener("click", () => {
-    if (!isAdmin) return alert("Only admin can record donations.");
+    if (!isAdmin) return;
 
-    const prodId = Number($("don-prod")?.value);
-    const qty = Number($("don-qty")?.value);
-    const recipient = $("don-recipient")?.value?.trim();
+    const id = Number($("don-prod").value);
+    const qty = Number($("don-qty").value);
+    const recipient = $("don-recipient").value.trim();
 
-    const prod = products.find(p => p.id === prodId);
-    if (!prod || qty <= 0 || !recipient) return alert("Invalid donation details.");
-    if (prod.qty < qty) return alert("Insufficient stock.");
+    const prod = products.find(p => p.id === id);
+    if (!prod) return alert("Product not found");
+    if (qty > prod.qty) return alert("Not enough stock");
 
     prod.qty -= qty;
-    donationHistory.push({ productId: prod.id, product: prod.name, qty, recipient, date: new Date().toLocaleString() });
+    donationHistory.push({ id, qty, product: prod.name, recipient, date: new Date().toLocaleString() });
 
     renderProducts();
     saveState();
-    alert(`Donation recorded: ${qty} x ${prod.name} to ${recipient}.`);
   });
 
+  // Waste
   $("record-waste")?.addEventListener("click", () => {
-    if (!isAdmin) return alert("Only admin can record waste.");
+    if (!isAdmin) return;
 
-    const prodId = Number($("don-prod")?.value);
-    const qty = Number($("don-qty")?.value);
-    const reason = $("waste-reason")?.value?.trim();
+    const id = Number($("don-prod").value);
+    const qty = Number($("don-qty").value);
+    const reason = $("waste-reason").value.trim();
 
-    const prod = products.find(p => p.id === prodId);
-    if (!prod || qty <= 0 || !reason) return alert("Invalid waste details.");
-    if (prod.qty < qty) return alert("Insufficient stock.");
+    const prod = products.find(p => p.id === id);
+    if (!prod || qty > prod.qty) return alert("Invalid");
 
     prod.qty -= qty;
-    wasteHistory.push({ productId: prod.id, product: prod.name, qty, reason, date: new Date().toLocaleString() });
+    wasteHistory.push({ id, qty, product: prod.name, reason, date: new Date().toLocaleString() });
 
     renderProducts();
     saveState();
-    alert(`Waste recorded: ${qty} x ${prod.name}. Reason: ${reason}.`);
   });
 
-  // --- CHECKOUT ---
-  $("place-order")?.addEventListener("click", () => {
-    const name = $("c-name")?.value?.trim();
-    const phone = $("c-phone")?.value?.trim();
-    const address = $("c-address")?.value?.trim();
+  // -------------------------------
+  //      ADMIN LOGIN
+  // -------------------------------
+  $("admin-login-btn")?.addEventListener("click", () => {
+    const pw = prompt("Enter admin password:");
+    if (pw === "peace123") {
+      isAdmin = true;
+      show($("admin-panel"));
+    } else alert("Wrong password");
+  });
 
-    if (!name || !phone || !address) {
-      alert
+  $("admin-logout-btn")?.addEventListener("click", () => {
+    isAdmin = false;
+    hide($("admin-panel"));
+  });
+
+  // -------------------------------
+  //   INITIAL LOAD
+  // -------------------------------
+  loadState();
+  renderProducts();
+  updateCartUI();
+});
 
